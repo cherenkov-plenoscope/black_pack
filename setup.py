@@ -21,7 +21,7 @@ setuptools.setup(
     url="https://github.com/cherenkov-plenoscope/black_pack",
     author="Sebastian Achim Mueller",
     author_email="sebastian-achim.mueller@mpi-hd.mpg.de",
-    packages=["black_pack",],
+    packages=["black_pack", "black_pack.apps"],
     package_data={"black_pack": [os.path.join("resources", "*")]},
     install_requires=[
         "black",
