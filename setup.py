@@ -36,4 +36,7 @@ setuptools.setup(
         "Operating System :: OS Independent",
         "Natural Language :: English",
     ],
+    entry_points={
+        "console_scripts": ["black-pack=python_package_linter.apps.main:main",]
+    },
 )
