@@ -388,15 +388,6 @@ def parse_kwargs_of_python_function(s):
     return kwargs
 
 
-def get_license_from_classifier(classifiers):
-    num_licenses = 0
-    out = None
-    for classifier in classifiers:
-        if "License" in classifier:
-            out = classifier
-            num_licenses += 1
-
-
 def check_all_python_files_are_black(pkg_dir):
     allpaths = glob.glob(os.path.join(pkg_dir, "**"), recursive=True)
 
