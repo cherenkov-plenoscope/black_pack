@@ -1,10 +1,12 @@
 from .version import __version__
 import os
+import sys
 import toml
 import yaml
 import pkg_resources
 import subprocess
 import numpy
+import difflib
 import restructuredtext_lint
 
 
@@ -14,6 +16,7 @@ def random_hash_16bit():
 
 def check_package(pkg_dir):
     expected_requires = []
+    check_gitignore(pkg_dir=pkg_dir)
     check_project_toml(pkg_dir=pkg_dir, expected_requires=expected_requires)
     check_requirements_txt(
         pkg_dir=pkg_dir, expected_requires=expected_requires
@@ -43,60 +46,59 @@ def check_package(pkg_dir):
                             potential_package
                         )
                     )
-
-    if "basename" in pkg and "TestStatus" in rmg["image_references"]:
-        """
-        .. |TestStatus| image:: https://github.com/cherenkov-plenoscope/basename/actions/workflows/test.yml/badge.svg?branch=main
-            :target: https://github.com/cherenkov-plenoscope/basename/actions/workflows/test.yml
-        """
-        if not rmg["image_references"]["TestStatus"]["image"].endswith(
-            "{basename:s}/actions/workflows/test.yml/badge.svg?branch=main".format(
-                basename=pkg["basename"]
-            )
-        ):
-            print(
-                "E-08F8: README.rst -> |TestStatus| -> image-link does not match package-name '{basename:s}' in setup.py.".format(
+    if "image_references" in rmg:
+        if "basename" in pkg and "TestStatus" in rmg["image_references"]:
+            """
+            .. |TestStatus| image:: https://github.com/cherenkov-plenoscope/basename/actions/workflows/test.yml/badge.svg?branch=main
+                :target: https://github.com/cherenkov-plenoscope/basename/actions/workflows/test.yml
+            """
+            if not rmg["image_references"]["TestStatus"]["image"].endswith(
+                "{basename:s}/actions/workflows/test.yml/badge.svg?branch=main".format(
                     basename=pkg["basename"]
                 )
-            )
+            ):
+                print(
+                    "E-08F8: README.rst -> |TestStatus| -> image-link does not match package-name '{basename:s}' in setup.py.".format(
+                        basename=pkg["basename"]
+                    )
+                )
 
-        if not rmg["image_references"]["TestStatus"]["target"].endswith(
-            "{basename:s}/actions/workflows/test.yml".format(
-                basename=pkg["basename"]
-            )
-        ):
-            print(
-                "E-2F11: README.rst -> |TestStatus| -> target-link does not match package-name '{basename:s}' in setup.py.".format(
+            if not rmg["image_references"]["TestStatus"]["target"].endswith(
+                "{basename:s}/actions/workflows/test.yml".format(
                     basename=pkg["basename"]
                 )
-            )
-
-    if "name" in pkg and "PyPiStatus" in rmg["image_references"]:
-        """
-        .. |PyPiStatus| image:: https://img.shields.io/pypi/v/name
-            :target: https://pypi.org/project/name
-        """
-        if not rmg["image_references"]["PyPiStatus"]["image"].endswith(
-            "https://img.shields.io/pypi/v/{name:s}".format(name=pkg["name"])
-        ):
-            print(
-                "E-2861: README.rst -> |PyPiStatus| -> image-link does not match package-name '{name:s}' in setup.py.".format(
-                    pkg["name"]
+            ):
+                print(
+                    "E-2F11: README.rst -> |TestStatus| -> target-link does not match package-name '{basename:s}' in setup.py.".format(
+                        basename=pkg["basename"]
+                    )
                 )
-            )
 
-        if not rmg["image_references"]["PyPiStatus"]["target"].endswith(
-            "https://pypi.org/project/{name:s}".format(name=pkg["name"])
-        ):
-            print(
-                "E-0E7A: README.rst -> |PyPiStatus| -> target-link does not match package-name '{name:s}' in setup.py.".format(
-                    name=pkg["name"]
+
+        if "name" in pkg and "PyPiStatus" in rmg["image_references"]:
+            """
+            .. |PyPiStatus| image:: https://img.shields.io/pypi/v/name
+                :target: https://pypi.org/project/name
+            """
+            if not rmg["image_references"]["PyPiStatus"]["image"].endswith(
+                "https://img.shields.io/pypi/v/{name:s}".format(name=pkg["name"])
+            ):
+                print(
+                    "E-2861: README.rst -> |PyPiStatus| -> image-link does not match package-name '{name:s}' in setup.py.".format(
+                        pkg["name"]
+                    )
                 )
-            )
+
+            if not rmg["image_references"]["PyPiStatus"]["target"].endswith(
+                "https://pypi.org/project/{name:s}".format(name=pkg["name"])
+            ):
+                print(
+                    "E-0E7A: README.rst -> |PyPiStatus| -> target-link does not match package-name '{name:s}' in setup.py.".format(
+                        name=pkg["name"]
+                    )
+                )
 
     ghg = check_github_workflows(pkg_dir=pkg_dir)
-
-    print(pkg["classifiers"], ghg["test"])
 
 
 def has_any_upper(s):
@@ -347,9 +349,11 @@ def get_license_from_classifier(classifiers):
 
 
 def check_setup_py(pkg_dir):
+    pkg = {}
+
     if not os.path.isfile(os.path.join(pkg_dir, "setup.py")):
         print("E-A9A4: ./setup.py is missing.")
-        return
+        return pkg
 
     if not is_pythoncode_black(os.path.join(pkg_dir, "setup.py")):
         print("E-530A: ./setup.py is not 'black -l79 -tpy37'.")
@@ -375,7 +379,6 @@ def check_setup_py(pkg_dir):
 
     last_block = blocks[-1]
 
-    pkg = {}
     if last_block.startswith("setuptools.setup(") and last_block.endswith(")"):
         setup_kwargs = parse_kwargs_of_python_function(last_block[17:-1])
 
@@ -554,9 +557,11 @@ def make_list_of_make_list_of_potential_python_packages(pkg_dir, base_dir):
 
 
 def check_readme_rst(pkg_dir):
+    out = {}
+
     if not os.path.isfile(os.path.join(pkg_dir, "README.rst")):
         print("E-D308: ./README.rst is missing.")
-        return None
+        return out
 
     if not is_restructuredtext_fine(path=os.path.join(pkg_dir, "README.rst")):
         print("E-EF4B: ./README.rst -> Errors. Check 'rst-lint'.")
@@ -640,7 +645,10 @@ def check_readme_rst(pkg_dir):
                 )
             )
 
-    return {"image_references": image_references, "blocks": blocks}
+    out["image_references"] = image_references
+    out["blocks"] = blocks
+
+    return out
 
 
 def tokenize_restructured_text_image_reference(txt):
@@ -694,6 +702,30 @@ def check_github_workflows(pkg_dir):
         check_github_workflows_test(test_yml=out["test"])
 
     return out
+
+
+def check_gitignore(pkg_dir):
+    gitignore_path = os.path.join(pkg_dir, ".gitignore")
+
+    if not os.path.isfile(gitignore_path):
+        print("E-930D: ./.gitignore file is missing.")
+        return
+
+    res_dir = pkg_resources.resource_filename(
+        "python_package_linter", "resources"
+    )
+    exp_filename = "gitignore_commit_8e67b94_2023-09-10"
+    exp_path = os.path.join(res_dir, exp_filename)
+
+    with open(exp_path) as ff:
+        fromlines = ff.readlines()
+    with open(gitignore_path) as tf:
+        tolines = tf.readlines()
+
+    diff = difflib.context_diff(fromlines, tolines)
+
+    if diff:
+        print("E-1564: ./.gitignore differs from 8e67b94 (2023-09-10).")
 
 
 
