@@ -13,7 +13,7 @@ with open(os.path.join("black_pack", "version.py")) as f:
 
 
 setuptools.setup(
-    name="black_pack_sebastian-achim-mueller",
+    name="black_pack",
     version=version,
     description=("Linting and structural checking for python-packages"),
     long_description=long_description,
