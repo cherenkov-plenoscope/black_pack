@@ -101,7 +101,7 @@ def check_package(pkg_dir):
                     "E-2861: "
                     "README.rst -> |PyPiStatus| -> image-link: "
                     "does not match package-name '{name:s}' in setup.py.".format(
-                        pkg["name"]
+                        name=pkg["name"]
                     )
                 )
 
@@ -503,6 +503,7 @@ def check_setup_py(pkg_dir):
                     s=setup_kwargs["packages"][1:-1]
                 )
                 for i in range(len(pkg["packages"])):
+                    pkg["packages"][i] = pkg["packages"][i].strip(" ")
                     pkg["packages"][i] = pkg["packages"][i].strip('"')
             except:
                 print("E-A9CC: ./setup.py -> setup() packages syntax.")
@@ -783,6 +784,7 @@ def check_github_workflows(pkg_dir):
         return out
     else:
         out["test"] = read_yml(path=test_yml_path)
+        check_github_workflows_test(test_yml=out["test"])
 
     release_yml_path = os.path.join(workflows_dir, "release.yml")
     if not os.path.isfile(release_yml_path):
@@ -790,11 +792,6 @@ def check_github_workflows(pkg_dir):
         return out
     else:
         out["release"] = read_yml(path=release_yml_path)
-
-    if "test" in out:
-        check_github_workflows_test(test_yml=out["test"])
-
-    if "release" in out:
         check_github_workflows_release(release_yml=out["release"])
 
     return out
