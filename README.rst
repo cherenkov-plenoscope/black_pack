@@ -30,7 +30,7 @@ Usage on command-line
     black-pack /path/to/my/python-package
 
 
-Black-pack will print a list of errors to stdout when your package differs from the black-pack's backed in expectations.
+Black-pack will print a list of errors to stdout when your package differs from black-pack's backed in expectations.
 
 
 
