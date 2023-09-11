@@ -45,13 +45,15 @@ def check_package(pkg_dir):
             for potential_package in potential_packages:
                 if potential_package not in pkg["packages"]:
                     print(
-                        "E-A878: setup.py -> setup -> packages is missing '{:s}'.".format(
-                            potential_package
-                        )
+                        "E-A878: "
+                        "setup.py -> setup -> packages is missing "
+                        "'{:s}'.".format(potential_package)
                     )
     if "image_references" in rmg:
         if "basename" in pkg and "TestStatus" in rmg["image_references"]:
             """
+            Example
+            -------
             .. |TestStatus| image:: https://github.com/cherenkov-plenoscope/basename/actions/workflows/test.yml/badge.svg?branch=main
                 :target: https://github.com/cherenkov-plenoscope/basename/actions/workflows/test.yml
             """
@@ -63,7 +65,8 @@ def check_package(pkg_dir):
                 print(
                     "E-08F8: "
                     "README.rst -> |TestStatus| -> image-link: "
-                    "does not match package-name '{basename:s}' in setup.py.".format(
+                    "does not match package-name "
+                    "'{basename:s}' in setup.py.".format(
                         basename=pkg["basename"]
                     )
                 )
@@ -76,13 +79,16 @@ def check_package(pkg_dir):
                 print(
                     "E-2F11: "
                     "README.rst -> |TestStatus| -> target-link: "
-                    "does not match package-name '{basename:s}' in setup.py.".format(
+                    "does not match package-name "
+                    "'{basename:s}' in setup.py.".format(
                         basename=pkg["basename"]
                     )
                 )
 
         if "name" in pkg and "PyPiStatus" in rmg["image_references"]:
             """
+            Example
+            -------
             .. |PyPiStatus| image:: https://img.shields.io/pypi/v/name
                 :target: https://pypi.org/project/name
             """
@@ -105,9 +111,8 @@ def check_package(pkg_dir):
                 print(
                     "E-0E7A: "
                     "README.rst -> |PyPiStatus| -> "
-                    "target-link does not match package-name '{name:s}' in setup.py.".format(
-                        name=pkg["name"]
-                    )
+                    "target-link does not match package-name "
+                    "'{name:s}' in setup.py.".format(name=pkg["name"])
                 )
 
     ghg = check_github_workflows(pkg_dir=pkg_dir)
@@ -347,8 +352,6 @@ def split_comma_with_bracket_balance(s):
         if s[i] == '"':
             q_bal = not q_bal
 
-        # print(s[i], "b_bal", b_bal, "c_bal", c_bal, "p_bal", p_bal, "q_bal", q_bal)
-
         if (
             s[i] == ","
             and b_bal == 0
@@ -432,7 +435,10 @@ def check_setup_py(pkg_dir):
     if "import os" not in blocks[0]:
         print("E-07D6: ./setup.py expected 'import os' in import-block.")
 
-    read_readme_code = 'with open("README.rst", "r", encoding="utf-8") as f:\n    long_description = f.read()'
+    read_readme_code = (
+        'with open("README.rst", "r", encoding="utf-8") as f:\n'
+        "    long_description = f.read()"
+    )
 
     if read_readme_code not in blocks[1]:
         print("E-9EB9: ./setup.py expected read-README-block.")
@@ -599,7 +605,13 @@ def check_setup_py(pkg_dir):
                 "does not end with name of packages[0]."
             )
 
-        read_version_code = 'with open(os.path.join("{name:s}", "version.py")) as f:\n    txt = f.read()\n    last_line = txt.splitlines()[-1]\n    version_string = last_line.split()[-1]\n    version = version_string.strip("\\"\'")'
+        read_version_code = (
+            'with open(os.path.join("{name:s}", "version.py")) as f:\n'
+            "    txt = f.read()\n"
+            "    last_line = txt.splitlines()[-1]\n"
+            "    version_string = last_line.split()[-1]\n"
+            '    version = version_string.strip("\\"\'")'
+        )
 
         if read_version_code.format(name=pkg["basename"]) not in blocks[2]:
             print("E-64A5: ./setup.py expected read-version-block.")
