@@ -255,7 +255,7 @@ def is_restructuredtext_fine(path):
 
 def list_licences():
     res_dir = pkg_resources.resource_filename(
-        "python_package_linter", "resources"
+        "black_pack", "resources"
     )
     licenses = {}
     licenses["GPLv3"] = {
@@ -712,7 +712,7 @@ def check_gitignore(pkg_dir):
         return
 
     res_dir = pkg_resources.resource_filename(
-        "python_package_linter", "resources"
+        "black_pack", "resources"
     )
     exp_filename = "gitignore_commit_8e67b94_2023-09-10"
     exp_path = os.path.join(res_dir, exp_filename)
@@ -724,9 +724,11 @@ def check_gitignore(pkg_dir):
 
     diff = difflib.context_diff(fromlines, tolines)
 
-    if diff:
+    try:
+        _ = diff.__next__()
         print("E-1564: ./.gitignore differs from 8e67b94 (2023-09-10).")
-
+    except StopIteration:
+        pass
 
 
 def check_github_workflows_test(test_yml):

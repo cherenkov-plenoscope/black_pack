@@ -5,8 +5,12 @@ black-pack
 
 |BlackPackLogo|
 
-Linting and structural checking for python-packages. Black-pack helps you to organize your python-package. Black-pack is very basic and not meant to support custom structures.
-Black-pack only checks if a python-package has a specific structure which the author thinks is `reasonable practice' and which is now backed into black-pack. Black-pack is meant to help you keep your various python-packages in `reasonable' shape with ease. The name `black-pack' is becasue black-pack adopts parts of the mindset found in `black'.
+Linting and structural checking for python-packages.
+Black-pack helps you to organize your python-package.
+Black-pack is very basic and not meant to support custom structures.
+Black-pack only checks if a python-package has a specific structure which the author thinks is 'reasonable practice' and which is now backed into black-pack.
+Black-pack is meant to help you keep your various python-packages in 'reasonable' shape with ease.
+The name 'black-pack' is becasue black-pack adopts parts of the mindset found in 'black'.
 
 *******
 Install
