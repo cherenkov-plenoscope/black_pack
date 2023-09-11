@@ -30,7 +30,9 @@ def test_split_comma_with_bracket_balance():
     assert tokens[0] == "abc"
     assert tokens[1] == "def"
 
-    tokens = black_pack.split_comma_with_bracket_balance("key1=value1,\nkey2=value2")
+    tokens = black_pack.split_comma_with_bracket_balance(
+        "key1=value1,\nkey2=value2"
+    )
     assert len(tokens) == 2
     assert tokens[0] == "key1=value1"
     assert tokens[1] == "\nkey2=value2"
@@ -63,9 +65,9 @@ def test_parse_kwargs_of_python_function():
     kwargs = black_pack.parse_kwargs_of_python_function(
         s=(
             'name="a",'
-            'version=v,'
+            "version=v,"
             'description=("text goes here"),'
-            'long_description=long_description,'
+            "long_description=long_description,"
             'long_description_content_type="text/x-rst",'
             'url="https://github.com/abc/a",'
             'author="my name",'
