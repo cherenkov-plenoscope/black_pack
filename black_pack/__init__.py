@@ -3,10 +3,12 @@ import os
 import sys
 import toml
 import yaml
+import glob
 import pkg_resources
 import subprocess
 import numpy
 import difflib
+import dictdiffer
 import restructuredtext_lint
 
 
@@ -21,6 +23,7 @@ def check_package(pkg_dir):
     check_requirements_txt(
         pkg_dir=pkg_dir, expected_requires=expected_requires
     )
+    check_all_python_files_are_black(pkg_dir=pkg_dir)
     license_key = check_license(pkg_dir=pkg_dir)
     pkg = check_setup_py(pkg_dir=pkg_dir)
 
@@ -58,7 +61,9 @@ def check_package(pkg_dir):
                 )
             ):
                 print(
-                    "E-08F8: README.rst -> |TestStatus| -> image-link does not match package-name '{basename:s}' in setup.py.".format(
+                    "E-08F8: "
+                    "README.rst -> |TestStatus| -> image-link: "
+                    "does not match package-name '{basename:s}' in setup.py.".format(
                         basename=pkg["basename"]
                     )
                 )
@@ -69,11 +74,12 @@ def check_package(pkg_dir):
                 )
             ):
                 print(
-                    "E-2F11: README.rst -> |TestStatus| -> target-link does not match package-name '{basename:s}' in setup.py.".format(
+                    "E-2F11: "
+                    "README.rst -> |TestStatus| -> target-link: "
+                    "does not match package-name '{basename:s}' in setup.py.".format(
                         basename=pkg["basename"]
                     )
                 )
-
 
         if "name" in pkg and "PyPiStatus" in rmg["image_references"]:
             """
@@ -81,10 +87,14 @@ def check_package(pkg_dir):
                 :target: https://pypi.org/project/name
             """
             if not rmg["image_references"]["PyPiStatus"]["image"].endswith(
-                "https://img.shields.io/pypi/v/{name:s}".format(name=pkg["name"])
+                "https://img.shields.io/pypi/v/{name:s}".format(
+                    name=pkg["name"]
+                )
             ):
                 print(
-                    "E-2861: README.rst -> |PyPiStatus| -> image-link does not match package-name '{name:s}' in setup.py.".format(
+                    "E-2861: "
+                    "README.rst -> |PyPiStatus| -> image-link: "
+                    "does not match package-name '{name:s}' in setup.py.".format(
                         pkg["name"]
                     )
                 )
@@ -93,12 +103,38 @@ def check_package(pkg_dir):
                 "https://pypi.org/project/{name:s}".format(name=pkg["name"])
             ):
                 print(
-                    "E-0E7A: README.rst -> |PyPiStatus| -> target-link does not match package-name '{name:s}' in setup.py.".format(
+                    "E-0E7A: "
+                    "README.rst -> |PyPiStatus| -> "
+                    "target-link does not match package-name '{name:s}' in setup.py.".format(
                         name=pkg["name"]
                     )
                 )
 
     ghg = check_github_workflows(pkg_dir=pkg_dir)
+    if "name" in pkg:
+        if "release" in ghg:
+            if "jobs" in ghg["release"]:
+                if "pypi-publish" in ghg["release"]["jobs"]:
+                    if "environment" in ghg["release"]["jobs"]["pypi-publish"]:
+                        if (
+                            "url"
+                            in ghg["release"]["jobs"]["pypi-publish"][
+                                "environment"
+                            ]
+                        ):
+                            release_url = ghg["release"]["jobs"][
+                                "pypi-publish"
+                            ]["environment"]["url"]
+
+                            if not release_url.endswith(pkg["name"]):
+                                print(
+                                    "E-CA7B: "
+                                    "./.github/workflows/release.yml -> "
+                                    "jobs.pypi-publish.environment.url: "
+                                    "does not end with '{:s}'.".format(
+                                        pkg["name"]
+                                    )
+                                )
 
 
 def has_any_upper(s):
@@ -112,6 +148,10 @@ def read_text(path):
     with open(path, "rt") as f:
         txt = f.read()
     return txt
+
+
+def read_yml(path):
+    return yaml.safe_load(read_text(path=path))
 
 
 def check_project_toml(pkg_dir, expected_requires=[]):
@@ -132,23 +172,25 @@ def check_project_toml(pkg_dir, expected_requires=[]):
     if "requires" in project["build-system"]:
         if "setuptools>=42" not in project["build-system"]["requires"]:
             print(
-                "E-522D: ./project.toml[build-system][requires] has no 'setuptools>=42'."
+                "E-522D: "
+                "./project.toml[build-system][requires] "
+                "has no 'setuptools>=42'."
             )
 
         for expected_require in expected_requires:
             if expected_require not in project["build-system"]["requires"]:
                 print(
-                    "E-EAF5: ./project.toml[build-system][requires] has no '{:s}'.".format(
-                        expected_require
-                    )
+                    "E-EAF5: "
+                    "./project.toml[build-system][requires] "
+                    "has no '{:s}'.".format(expected_require)
                 )
 
         for require in project["build-system"]["requires"]:
             if has_any_upper(require):
                 print(
-                    "E-1319: ./project.toml[build-system][requires] has upper cases in package-name '{:s}'.".format(
-                        require
-                    )
+                    "E-1319: "
+                    "./project.toml[build-system][requires] "
+                    "has upper cases in package-name '{:s}'.".format(require)
                 )
 
     else:
@@ -157,7 +199,9 @@ def check_project_toml(pkg_dir, expected_requires=[]):
     if "build-backend" in project["build-system"]:
         if "setuptools.build_meta" != project["build-system"]["build-backend"]:
             print(
-                "E-E4DA: ./project.toml[build-system][build-backend] is not 'setuptools.build_meta'."
+                "E-E4DA: "
+                "./project.toml[build-system][build-backend] "
+                "is not 'setuptools.build_meta'."
             )
             return
     else:
@@ -184,9 +228,9 @@ def check_requirements_txt(pkg_dir, expected_requires):
     for require in requires:
         if has_any_upper(require):
             print(
-                "E-E644: ./requirements.txt has upper cases in package-name '{:s}'.".format(
-                    require
-                )
+                "E-E644: "
+                "./requirements.txt "
+                "has upper cases in package-name '{:s}'.".format(require)
             )
 
 
@@ -254,12 +298,14 @@ def is_restructuredtext_fine(path):
 
 
 def list_licences():
-    res_dir = pkg_resources.resource_filename(
-        "black_pack", "resources"
-    )
+    res_dir = pkg_resources.resource_filename("black_pack", "resources")
     licenses = {}
     licenses["GPLv3"] = {
-        "pypi": "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "pypi": (
+            "License :: "
+            "OSI Approved :: "
+            "GNU General Public License v3 (GPLv3)"
+        ),
         "github": "gpl-3.0",
         "raw": read_text(os.path.join(res_dir, "GPLv3.txt")),
     }
@@ -348,6 +394,20 @@ def get_license_from_classifier(classifiers):
             num_licenses += 1
 
 
+def check_all_python_files_are_black(pkg_dir):
+    allpaths = glob.glob(os.path.join(pkg_dir, "**"), recursive=True)
+
+    pypaths = []
+    for path in allpaths:
+        if path.lower().endswith(".py"):
+            pypaths.append(path)
+
+    for pypath in pypaths:
+        if not is_pythoncode_black(path=pypath):
+            relpath = os.path.relpath(pypath, start=pkg_dir)
+            print("E-58F1: {:s} is not 'black -l79 -tpy37'.".format(relpath))
+
+
 def check_setup_py(pkg_dir):
     pkg = {}
 
@@ -390,7 +450,10 @@ def check_setup_py(pkg_dir):
         if "version" in setup_kwargs:
             if "version" != setup_kwargs["version"]:
                 print(
-                    "E-8283: ./setup.py -> setup() expected 'version=version' in order to use the version-variable read in from version.py."
+                    "E-8283: "
+                    "./setup.py -> setup() "
+                    "expected 'version=version' in order to use "
+                    "the version-variable read in from version.py."
                 )
         else:
             print("E-94C2: ./setup.py -> setup() has no 'version'.")
@@ -401,7 +464,11 @@ def check_setup_py(pkg_dir):
         if "long_description" in setup_kwargs:
             if "long_description" != setup_kwargs["long_description"]:
                 print(
-                    "E-E0B9: ./setup.py -> setup() expected 'long_description=long_description' in order to use the long_description-variable read in from README.rst."
+                    "E-E0B9: "
+                    "./setup.py -> setup() "
+                    "expected 'long_description=long_description' "
+                    "in order to use the long_description-variable "
+                    "read in from README.rst."
                 )
         else:
             print("E-096D: ./setup.py -> setup() has no 'long_description'.")
@@ -411,7 +478,9 @@ def check_setup_py(pkg_dir):
                 "long_description_content_type"
             ].strip('"'):
                 print(
-                    'E-9E71: ./setup.py -> setup() expected long_description_content_type="text/x-rst".'
+                    "E-9E71: "
+                    "./setup.py -> setup() "
+                    'expected long_description_content_type="text/x-rst".'
                 )
         else:
             print("E-E2CE: ./setup.py -> setup() has no 'long_description'.")
@@ -476,17 +545,23 @@ def check_setup_py(pkg_dir):
 
             if "Programming Language :: Python :: 3" not in pkg["classifiers"]:
                 print(
-                    "E-20A7: ./setup.py -> setup() -> classifiers missing 'Programming Language :: Python :: 3'."
+                    "E-20A7: "
+                    "./setup.py -> setup() -> classifiers missing "
+                    "'Programming Language :: Python :: 3'."
                 )
 
             if "Natural Language :: English" not in pkg["classifiers"]:
                 print(
-                    "E-B98D: ./setup.py -> setup() -> classifiers missing 'Natural Language :: English'."
+                    "E-B98D: "
+                    "./setup.py -> setup() -> classifiers "
+                    "missing 'Natural Language :: English'."
                 )
 
             if "Operating System :: OS Independent" not in pkg["classifiers"]:
                 print(
-                    "E-719A: ./setup.py -> setup() -> classifiers missing 'Operating System :: OS Independent'."
+                    "E-719A: "
+                    "./setup.py -> setup() -> classifiers "
+                    "missing 'Operating System :: OS Independent'."
                 )
 
         else:
@@ -494,12 +569,17 @@ def check_setup_py(pkg_dir):
 
         if "project_urls" in setup_kwargs and "url" in setup_kwargs:
             print(
-                "W-C8B1: ./setup.py -> setup() contains 'project_urls' what might not be needed becasue 'url' is also present."
+                "W-C8B1: "
+                "./setup.py -> setup() "
+                "contains 'project_urls' what might not be needed "
+                "becasue 'url' is also present."
             )
 
         if "license" in setup_kwargs and "url" in setup_kwargs:
             print(
-                "W-915F: ./setup.py -> setup() contains 'license'. Use classifiers instead."
+                "W-915F: "
+                "./setup.py -> setup() "
+                "contains 'license'. Use classifiers instead."
             )
 
         # sanity checks in pkg
@@ -507,12 +587,16 @@ def check_setup_py(pkg_dir):
 
         if not pkg["name"].startswith(pkg["basename"]):
             print(
-                "E-8391: ./setup.py -> setup() -> name does not start with name of packages[0]."
+                "E-8391: "
+                "./setup.py -> setup() -> name "
+                "does not start with name of packages[0]."
             )
 
         if not pkg["url"].endswith(pkg["basename"]):
             print(
-                "E-EFBD: ./setup.py -> setup() -> url does not end with name of packages[0]."
+                "E-EFBD: "
+                "./setup.py -> setup() -> url "
+                "does not end with name of packages[0]."
             )
 
         read_version_code = 'with open(os.path.join("{name:s}", "version.py")) as f:\n    txt = f.read()\n    last_line = txt.splitlines()[-1]\n    version_string = last_line.split()[-1]\n    version = version_string.strip("\\"\'")'
@@ -614,17 +698,23 @@ def check_readme_rst(pkg_dir):
 
     if "TestStatus" not in image_references:
         print(
-            "E-1882: ./README.rst -> batches -> |TestStatus| has no image-reference. No indent=4?"
+            "E-1882: "
+            "./README.rst -> batches -> "
+            "|TestStatus| has no image-reference. No indent=4?"
         )
 
     if "PyPiStatus" not in image_references:
         print(
-            "E-E431: ./README.rst -> batches -> |PyPiStatus| has no image-reference. No indent=4?"
+            "E-E431: "
+            "./README.rst -> batches -> |PyPiStatus| "
+            "has no image-reference. No indent=4?"
         )
 
     if "BlackStyle" not in image_references:
         print(
-            "E-D6CB: ./README.rst -> batches -> |BlackStyle| has no image-reference. No indent=4?"
+            "E-D6CB: "
+            "./README.rst -> batches -> |BlackStyle| "
+            "has no image-reference. No indent=4?"
         )
     else:
         black_image_link = (
@@ -632,17 +722,17 @@ def check_readme_rst(pkg_dir):
         )
         if not image_references["BlackStyle"]["image"] == black_image_link:
             print(
-                "E-E59F: ./README.rst -> batches -> |BlackStyle| image-link shpuld be: {:s}.".format(
-                    black_image_link
-                )
+                "E-E59F: "
+                "./README.rst -> batches -> |BlackStyle| "
+                "image-link shpuld be: {:s}.".format(black_image_link)
             )
 
         black_target_link = "https://github.com/psf/black"
         if not image_references["BlackStyle"]["target"] == black_target_link:
             print(
-                "E-0EB8: ./README.rst -> batches -> |BlackStyle| target-link shpuld be: {:s}.".format(
-                    black_target_link
-                )
+                "E-0EB8: "
+                "./README.rst -> batches -> |BlackStyle| "
+                "target-link shpuld be: {:s}.".format(black_target_link)
             )
 
     out["image_references"] = image_references
@@ -684,22 +774,25 @@ def check_github_workflows(pkg_dir):
         print("E-C6E7: ./.github/workflows directory is missing.")
         return out
 
-    test_yml = os.path.join(workflows_dir, "test.yml")
-    if not os.path.isfile(test_yml):
+    test_yml_path = os.path.join(workflows_dir, "test.yml")
+    if not os.path.isfile(test_yml_path):
         print("E-DEFC: ./.github/workflows/test.yml is missing.")
         return out
     else:
-        out["test"] = yaml.safe_load(read_text(test_yml))
+        out["test"] = read_yml(path=test_yml_path)
 
-    release_yml = os.path.join(workflows_dir, "release.yml")
-    if not os.path.isfile(release_yml):
+    release_yml_path = os.path.join(workflows_dir, "release.yml")
+    if not os.path.isfile(release_yml_path):
         print("E-134E: ./.github/workflows/release.yml is missing.")
         return out
     else:
-        out["release"] = yaml.safe_load(read_text(release_yml))
+        out["release"] = read_yml(path=release_yml_path)
 
     if "test" in out:
         check_github_workflows_test(test_yml=out["test"])
+
+    if "release" in out:
+        check_github_workflows_release(release_yml=out["release"])
 
     return out
 
@@ -711,9 +804,7 @@ def check_gitignore(pkg_dir):
         print("E-930D: ./.gitignore file is missing.")
         return
 
-    res_dir = pkg_resources.resource_filename(
-        "black_pack", "resources"
-    )
+    res_dir = pkg_resources.resource_filename("black_pack", "resources")
     exp_filename = "gitignore_commit_8e67b94_2023-09-10"
     exp_path = os.path.join(res_dir, exp_filename)
 
@@ -726,14 +817,63 @@ def check_gitignore(pkg_dir):
 
     try:
         _ = diff.__next__()
-        print("E-1564: ./.gitignore differs from 8e67b94 (2023-09-10).")
+        print("E-1564: ./.gitignore differs from {:s}.".format(exp_path))
     except StopIteration:
         pass
 
 
 def check_github_workflows_test(test_yml):
-    if not "name" in test_yml:
-        print("E-A3CF: ./.github/workflows/test.yml has no 'name'.")
+    res_dir = pkg_resources.resource_filename("black_pack", "resources")
 
-        if not test_yml["name"] == "test":
-            print("E-671E: ./.github/workflows/test.yml has 'name != test'.")
+    expected_test_yml = read_yml(
+        path=os.path.join(res_dir, "github_workflows_test.yml")
+    )
+
+    diff = dictdiffer.diff(first=expected_test_yml, second=test_yml)
+
+    try:
+        diff.__next__()
+        print("E-A3CF: ./.github/workflows/test.yml is not as expected.")
+    except StopIteration:
+        pass
+
+
+def check_github_workflows_release(release_yml):
+    res_dir = pkg_resources.resource_filename("black_pack", "resources")
+
+    expected_release_yml = read_yml(
+        path=os.path.join(res_dir, "github_workflows_release.yml")
+    )
+
+    diff = dictdiffer.diff(first=expected_release_yml, second=release_yml)
+    diffs = [dd for dd in diff]
+
+    if len(diffs) == 0:
+        print(
+            "E-671E: "
+            "./.github/workflows/release.yml -> "
+            "jobs.pypi-publish.environment.url: Must not be 'NAME'."
+        )
+        return
+
+    if len(diffs) > 1:
+        print(
+            "E-671E: "
+            "./.github/workflows/release.yml "
+            "is too different from {:s}.".format(expected_release_yml)
+        )
+        return
+
+    ch = diffs[0]
+    if len(ch) != 3:
+        if "change" != ch[0]:
+            if "jobs.pypi-publish.environment.url" != ch[1]:
+                print(
+                    "E-671E: "
+                    "./.github/workflows/release.yml -> "
+                    "jobs.pypi-publish.environment.url "
+                    "is not set."
+                )
+                return
+
+    return

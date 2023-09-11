@@ -29,6 +29,7 @@ setuptools.setup(
         "toml",
         "restructuredtext-lint",
         "pyyaml",
+        "dictdiffer",
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

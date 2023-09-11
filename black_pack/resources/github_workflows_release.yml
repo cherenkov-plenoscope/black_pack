@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/project/black_pack
+      url: https://pypi.org/project/NAME
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
