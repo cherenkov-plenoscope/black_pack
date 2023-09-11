@@ -1,36 +1,29 @@
-#####################
-Python Package Linter
-#####################
+##########
+black-pack
+##########
 |TestStatus| |PyPiStatus| |BlackStyle|
 
-Abstract here.
+|BlackPackLogo|
+
+Linting and structural checking for python-packages. Black-pack helps you to organize your python-package. Black-pack is very basic and not meant to support custom structures.
+Black-pack only checks if a python-package has a specific structure which the author thinks is `reasonable practice' and which is now backed into black-pack. Black-pack is meant to help you keep your various python-packages in `reasonable' shape with ease. The name `black-pack' is becasue black-pack adopts parts of the mindset found in `black'.
 
 *******
-Section
+Install
 *******
 
-Lorem ipsum...
+.. code-block::
 
-Sub Section
-===========
-
-Less important.
-
-Sub Sub Section
----------------
-
-Even less important.
-
-.. code-block:: python
-
-    n = list([1, 2, 3])
+    pip install black_pack_sebastian-achim-mueller
 
 
 .. |BlackStyle| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 
-.. |TestStatus| image:: https://github.com/cherenkov-plenoscope/python_package_linter/actions/workflows/test.yml/badge.svg?branch=main
-    :target: https://github.com/cherenkov-plenoscope/python_package_linter/actions/workflows/test.yml
+.. |TestStatus| image:: https://github.com/cherenkov-plenoscope/black_pack/actions/workflows/test.yml/badge.svg?branch=main
+    :target: https://github.com/cherenkov-plenoscope/black_pack/actions/workflows/test.yml
 
 .. |PyPiStatus| image:: https://img.shields.io/pypi/v/python_package_linter_sebastian-achim-mueller
-    :target: https://pypi.org/project/python_package_linter_sebastian-achim-mueller
+    :target: https://pypi.org/project/black_pack_sebastian-achim-mueller
+
+.. |BlackPackLogo| image:: https://github.com/cherenkov-plenoscope/black_pack/blob/main/readme/black_pack.svg?raw=True

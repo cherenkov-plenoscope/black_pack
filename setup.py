@@ -5,7 +5,7 @@ with open("README.rst", "r", encoding="utf-8") as f:
     long_description = f.read()
 
 
-with open(os.path.join("python_package_linter", "version.py")) as f:
+with open(os.path.join("black_pack", "version.py")) as f:
     txt = f.read()
     last_line = txt.splitlines()[-1]
     version_string = last_line.split()[-1]
@@ -13,16 +13,16 @@ with open(os.path.join("python_package_linter", "version.py")) as f:
 
 
 setuptools.setup(
-    name="python_package_linter_sebastian-achim-mueller",
+    name="black_pack_sebastian-achim-mueller",
     version=version,
-    description=("Lint python-packages"),
+    description=("Linting and structural checking for python-packages"),
     long_description=long_description,
     long_description_content_type="text/x-rst",
-    url="https://github.com/cherenkov-plenoscope/python_package_linter",
+    url="https://github.com/cherenkov-plenoscope/black_pack",
     author="Sebastian Achim Mueller",
     author_email="sebastian-achim.mueller@mpi-hd.mpg.de",
-    packages=["python_package_linter",],
-    package_data={"python_package_linter": [os.path.join("resources", "*")]},
+    packages=["black_pack",],
+    package_data={"black_pack": [os.path.join("resources", "*")]},
     install_requires=[
         "black",
         "cython-lint",
@@ -37,6 +37,6 @@ setuptools.setup(
         "Natural Language :: English",
     ],
     entry_points={
-        "console_scripts": ["black-pack=python_package_linter.apps.main:main",]
+        "console_scripts": ["black-pack=black_pack.apps.main:main",]
     },
 )
