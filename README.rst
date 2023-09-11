@@ -21,6 +21,19 @@ Install
     pip install black_pack
 
 
+*********************
+Usage on command-line
+*********************
+
+.. code-block::
+
+    black-pack /path/to/my/python-package
+
+
+Black-pack will print a list of errors to stdout when your package differs from the black-pack's backed in expectations.
+
+
+
 .. |BlackStyle| image:: https://img.shields.io/badge/code%20style-black-000000.svg
     :target: https://github.com/psf/black
 
