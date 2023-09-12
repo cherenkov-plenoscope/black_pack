@@ -5,7 +5,11 @@ import tempfile
 
 
 def cli_stdout(cmd):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,)
+    p = subprocess.Popen(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
     p.wait()
     return p.stdout.read()
 
@@ -35,11 +39,6 @@ def test_init_and_check_in_empty_dir():
         pkg_dir = os.path.join(tmp, "my_package")
         assert os.path.isdir(pkg_dir)
         os.chdir(pkg_dir)
-
-        with open(os.path.join(pkg_dir, "setup.py"), "rt") as f:
-            print("=========")
-            print(f.read())
-            print("=========")
 
         stdout_check = cli_stdout(["black-pack", "check"])
         assert len(stdout_check) == 0

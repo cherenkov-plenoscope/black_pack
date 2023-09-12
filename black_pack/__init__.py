@@ -15,7 +15,7 @@ import shutil
 
 
 def random_hash_16bit():
-    return "{:04X}".format(int(numpy.random.uniform(low=1, high=2 ** 16)))
+    return "{:04X}".format(int(numpy.random.uniform(low=1, high=2**16)))
 
 
 def check_package(pkg_dir):
@@ -39,8 +39,10 @@ def check_package(pkg_dir):
                 "E-787E: directory ./{:s} is missing.".format(pkg["basename"])
             )
 
-        potential_packages = make_list_of_make_list_of_potential_python_packages(
-            pkg_dir=pkg_dir, base_dir=base_dir
+        potential_packages = (
+            make_list_of_make_list_of_potential_python_packages(
+                pkg_dir=pkg_dir, base_dir=base_dir
+            )
         )
 
         if "packages" in pkg:
@@ -922,7 +924,9 @@ def check_github_workflows_release(release_yml):
 
 def make_restructured_text_image_reference(key, image, target):
     return ".. |{key:s}| image:: {image:s}\n    :target: {target:s}\n".format(
-        key=key, image=image, target=target,
+        key=key,
+        image=image,
+        target=target,
     )
 
 
@@ -973,7 +977,11 @@ def make_default_readme_rst(name, basename, github_organization_url):
 
 
 def make_setup_py(
-    name, basename, author, url_base, pypi_license_classifier,
+    name,
+    basename,
+    author,
+    url_base,
+    pypi_license_classifier,
 ):
     s = ""
     s += "import setuptools\n"
@@ -995,7 +1003,9 @@ def make_setup_py(
     s += '    url="{:s}",\n'.format(os.path.join(url_base, basename))
     s += '    author="{:s}",\n'.format(author)
     s += '    author_email="{:s}@mail",\n'.format(author)
-    s += '    packages=["{:s}",],\n'.format(basename)
+    s += "    packages=[\n"
+    s += '        "{:s}",\n'.format(basename)
+    s += "    ],\n"
     s += '    package_data={{"{:s}": []}},\n'.format(basename)
     s += "    install_requires=[],\n"
     s += "    classifiers=[\n"
@@ -1049,7 +1059,7 @@ def init(
             + "    pass\n"
         )
 
-    with open(os.path.join(pkg_dir, "setup.py"), "wb") as f:
+    with open(os.path.join(pkg_dir, "setup.py"), "wt") as f:
         setup_py_str = make_setup_py(
             name=name,
             basename=basename,
@@ -1057,7 +1067,7 @@ def init(
             url_base=github_organization_url,
             pypi_license_classifier=known_licenses[license_key]["pypi"],
         )
-        f.write(setup_py_str.encode())
+        f.write(setup_py_str)
 
     shutil.copy(
         src=os.path.join(resources_dir, "requirements.txt"),

@@ -38,6 +38,8 @@ setuptools.setup(
         "Natural Language :: English",
     ],
     entry_points={
-        "console_scripts": ["black-pack=black_pack.apps.main:main",]
+        "console_scripts": [
+            "black-pack=black_pack.apps.main:main",
+        ]
     },
 )
