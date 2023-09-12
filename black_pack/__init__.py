@@ -53,6 +53,17 @@ def check_package(pkg_dir):
                         "setup.py -> setup -> packages is missing "
                         "'{:s}'.".format(potential_package)
                     )
+
+    if "basename" in pkg:
+        pkg_dir_basename = os.path.basename(os.path.abspath(pkg_dir))
+        if not pkg_dir_basename == pkg["basename"]:
+            print(
+                "E-2474: "
+                "The basename of the path {:s} ".format(pkg_dir_basename)
+                + "dose not match the basename {:s} ".format(pkg["basename"])
+                + "in setup.py."
+            )
+
     if "image_references" in rmg:
         if "basename" in pkg and "TestStatus" in rmg["image_references"]:
             """
@@ -1019,7 +1030,7 @@ def make_setup_py(
 
 
 def init(
-    path,
+    pkg_dir,
     name="my_package",
     basename="my_package",
     author="AUTHOR",
@@ -1030,7 +1041,6 @@ def init(
     license_key="MIT",
 ):
     resources_dir = pkg_resources.resource_filename("black_pack", "resources")
-    pkg_dir = os.path.join(path, name)
 
     known_licenses = list_licences()
     if license_key not in known_licenses:

@@ -13,8 +13,16 @@ def main():
     )
     commands = parser.add_subparsers(help="Commands", dest="command")
 
+    # init
+    # ====
     init_cmd = commands.add_parser(
         "init", help="Initialize an empyt python-package."
+    )
+    init_cmd.add_argument(
+        "pkg_dir",
+        metavar="PATH",
+        type=str,
+        help=("The directory to contain the python-package."),
     )
     init_cmd.add_argument(
         "-n",
@@ -62,33 +70,41 @@ def main():
         default="https://github.com/cherenkov-plenoscope",
     )
 
+    # check
+    # =====
     check_cmd = commands.add_parser(
         "check", help="Check an existing python-package."
     )
     check_cmd.add_argument(
-        "-p",
-        "--path",
+        "pkg_dir",
         metavar="PATH",
         type=str,
-        help=("Path of the python-package."),
+        help=("The directory of the python-package."),
     )
 
+    # write
+    # =====
     write_cmd = commands.add_parser(
         "write", help="Writes a specific file into an existing python-package."
     )
     write_cmd.add_argument(
-        "path",
+        "pkg_dir",
         metavar="PATH",
+        type=str,
+        help=("The directory of the python-package."),
+    )
+    write_cmd.add_argument(
+        "file",
+        metavar="RELATIVE_PATH",
         type=str,
         help=("The path inside the python-package to be (over)written."),
     )
 
     args = parser.parse_args()
-    pkg_dir = os.getcwd()
 
     if args.command == "init":
         black_pack.init(
-            path=os.getcwd(),
+            pkg_dir=args.pkg_dir,
             name=args.name,
             basename=args.basename,
             author=args.author,
@@ -103,24 +119,29 @@ def main():
         resources_dir = pkg_resources.resource_filename(
             "black_pack", "resources"
         )
-        relpath = os.path.relpath(args.path, start=pkg_dir)
+        relpath = args.file
+        pkg_dir = args.pkg_dir
 
         github_workflows_dir = os.path.join(".github", "workflows")
         if relpath == os.path.join(github_workflows_dir, "test.yml"):
-            os.makedirs(github_workflows_dir, exist_ok=True)
+            os.makedirs(
+                os.path.join(pkg_dir, github_workflows_dir), exist_ok=True
+            )
             shutil.copy(
                 src=os.path.join(resources_dir, "github_workflows_test.yml"),
-                dst=os.path.join(github_workflows_dir, "test.yml"),
+                dst=os.path.join(pkg_dir, github_workflows_dir, "test.yml"),
             )
             return
 
         if relpath == os.path.join(github_workflows_dir, "release.yml"):
-            os.makedirs(github_workflows_dir, exist_ok=True)
+            os.makedirs(
+                os.path.join(pkg_dir, github_workflows_dir), exist_ok=True
+            )
             shutil.copy(
                 src=os.path.join(
                     resources_dir, "github_workflows_release.yml"
                 ),
-                dst=os.path.join(github_workflows_dir, "release.yml"),
+                dst=os.path.join(pkg_dir, github_workflows_dir, "release.yml"),
             )
             return
 
@@ -150,11 +171,7 @@ def main():
         print("File: {:s} is not knwon.".format(relpath))
 
     elif args.command == "check":
-        if args.path:
-            pkg_dir = args.path
-        else:
-            pkg_dir = os.getcwd()
-        black_pack.check_package(pkg_dir=pkg_dir)
+        black_pack.check_package(pkg_dir=args.pkg_dir)
 
     else:
         print("No or unknown command.")
