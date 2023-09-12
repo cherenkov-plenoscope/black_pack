@@ -29,8 +29,6 @@ Usage on command-line
 Check
 =====
 
-In your python-package:
-
 .. code-block::
 
     black-pack check /path/to/my/python-package
