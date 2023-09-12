@@ -33,7 +33,7 @@ In your python-package:
 
 .. code-block::
 
-    black-pack check
+    black-pack check /path/to/my/python-package
 
 
 Black-pack will print a list of errors to stdout when your package differs from black-pack's backed in expectations.
@@ -44,7 +44,7 @@ Init
 
 .. code-block::
 
-    black-pack init
+    black-pack init /path/to/my/new/python-package
 
 
 Will write an entire skeleton for your python-package (All directories and files). You can pass optional arguments to e.g. specify the package's name.
@@ -55,7 +55,7 @@ Write
 
 .. code-block::
 
-    black-pack write ./.gitignore
+    black-pack write /path/to/my/python-package .gitignore
 
 
 Writes a single specific file, e.g. the ``.gitignore``.
