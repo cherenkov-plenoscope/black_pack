@@ -25,13 +25,40 @@ Install
 Usage on command-line
 *********************
 
+
+Check
+=====
+
+In your python-package:
+
 .. code-block::
 
-    black-pack /path/to/my/python-package
+    black-pack check
 
 
 Black-pack will print a list of errors to stdout when your package differs from black-pack's backed in expectations.
 
+
+Init
+====
+
+.. code-block::
+
+    black-pack init
+
+
+Will write an entire skeleton for your python-package (All directories and files). You can pass optional arguments to e.g. specify the package's name.
+
+
+Write
+=====
+
+.. code-block::
+
+    black-pack write ./.gitignore
+
+
+Writes a single specific file, e.g. the ``.gitignore``.
 
 
 .. |BlackStyle| image:: https://img.shields.io/badge/code%20style-black-000000.svg

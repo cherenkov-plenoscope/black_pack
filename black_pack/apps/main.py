@@ -1,6 +1,8 @@
 import black_pack
 import argparse
 import os
+import shutil
+import pkg_resources
 
 
 def main():
@@ -8,15 +10,154 @@ def main():
         prog="black-pack",
         description="Lint the structure of your python-package.",
     )
-    parser.add_argument(
+    commands = parser.add_subparsers(help="Commands", dest="command")
+
+    init_cmd = commands.add_parser(
+        "init", help="Initialize an empyt python-package."
+    )
+    init_cmd.add_argument(
+        "-n",
+        "--name",
+        metavar="NAME",
+        type=str,
+        help=("The name of the package as it would appear in PyPi."),
+        required=False,
+        default="my_package",
+    )
+    init_cmd.add_argument(
+        "-b",
+        "--basename",
+        metavar="BASENAME",
+        type=str,
+        help=("The name of the package as it is imported in python."),
+        required=False,
+        default="my_package",
+    )
+    init_cmd.add_argument(
+        "-a",
+        "--author",
+        metavar="AUTHOR",
+        type=str,
+        help=("The name of the author of the package."),
+        required=False,
+        default="AUTHOR",
+    )
+    init_cmd.add_argument(
+        "-l",
+        "--license",
+        metavar="KEY",
+        type=str,
+        help=("The license of the package."),
+        required=False,
+        default="MIT",
+    )
+    init_cmd.add_argument(
+        "-u",
+        "--host",
+        metavar="URL",
+        type=str,
+        help=("The of url where the package is hosted."),
+        required=False,
+        default="https://github.com/cherenkov-plenoscope",
+    )
+
+    check_cmd = commands.add_parser(
+        "check", help="Check an existing python-package."
+    )
+    check_cmd.add_argument(
+        "-p",
+        "--path",
+        metavar="PATH",
+        type=str,
+        help=("Path of the python-package."),
+    )
+
+    write_cmd = commands.add_parser(
+        "write", help="Writes a specific file into an existing python-package."
+    )
+    write_cmd.add_argument(
         "path",
         metavar="PATH",
         type=str,
-        help=("PATH to your python-package."),
+        help=("The path inside the python-package to be (over)written."),
     )
-    args = parser.parse_args()
 
-    black_pack.check_package(pkg_dir=args.path)
+    args = parser.parse_args()
+    pkg_dir = os.getcwd()
+
+    if args.command == "init":
+        black_pack.init(
+            path=os.getcwd(),
+            name=args.name,
+            basename=args.basename,
+            author=args.author,
+            exist_ok=True,
+            github_organization_url=args.host,
+            github_workflows_test=True,
+            github_workflows_release=True,
+            license_key=args.license,
+        )
+
+    elif args.command == "write":
+        resources_dir = pkg_resources.resource_filename(
+            "black_pack", "resources"
+        )
+        relpath = os.path.relpath(args.path, start=pkg_dir)
+
+        github_workflows_dir = os.path.join(".github", "workflows")
+        if relpath == os.path.join(github_workflows_dir, "test.yml"):
+            os.makedirs(github_workflows_dir, exist_ok=True)
+            shutil.copy(
+                src=os.path.join(resources_dir, "github_workflows_test.yml"),
+                dst=os.path.join(github_workflows_dir, "test.yml"),
+            )
+            return
+
+        if relpath == os.path.join(github_workflows_dir, "release.yml"):
+            os.makedirs(github_workflows_dir, exist_ok=True)
+            shutil.copy(
+                src=os.path.join(
+                    resources_dir, "github_workflows_release.yml"
+                ),
+                dst=os.path.join(github_workflows_dir, "release.yml"),
+            )
+            return
+
+        if relpath == os.path.join(".gitignore"):
+            shutil.copy(
+                src=os.path.join(
+                    resources_dir, "gitignore_commit_8e67b94_2023-09-10"
+                ),
+                dst=os.path.join(pkg_dir, ".gitignore"),
+            )
+            return
+
+        if relpath == os.path.join("requirements.txt"):
+            shutil.copy(
+                src=os.path.join(resources_dir, "requirements.txt"),
+                dst=os.path.join(pkg_dir, "requirements.txt"),
+            )
+            return
+
+        if relpath == os.path.join("project.toml"):
+            shutil.copy(
+                src=os.path.join(resources_dir, "project.toml"),
+                dst=os.path.join(pkg_dir, "project.toml"),
+            )
+            return
+
+        print("File: {:s} is not knwon.".format(relpath))
+
+    elif args.command == "check":
+        if args.path:
+            pkg_dir = args.path
+        else:
+            pkg_dir = os.getcwd()
+        black_pack.check_package(pkg_dir=pkg_dir)
+
+    else:
+        print("No or unknown command.")
+        parser.print_help()
 
 
 if __name__ == "__main__":

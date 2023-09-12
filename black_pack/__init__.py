@@ -10,6 +10,8 @@ import numpy
 import difflib
 import dictdiffer
 import restructuredtext_lint
+import io
+import shutil
 
 
 def random_hash_16bit():
@@ -141,6 +143,24 @@ def check_package(pkg_dir):
                                     )
                                 )
 
+    # check for tests
+    # ---------------
+    if "basename" in pkg:
+        tests_dir = os.path.join(pkg_dir, pkg["basename"], "tests")
+        if not os.path.isdir(tests_dir):
+            print(
+                "E-3D08: "
+                "./{:s}/tests ".format(pkg["basename"]) + "does not exist."
+            )
+
+        potential_test_files = glob.glob(os.path.join(tests_dir, "test*.py"))
+        if not potential_test_files:
+            print(
+                "E-4E82: "
+                "./{:s}/tests ".format(pkg["basename"])
+                + "does not contain any test*.py file."
+            )
+
 
 def has_any_upper(s):
     for char in s:
@@ -157,6 +177,11 @@ def read_text(path):
 
 def read_yml(path):
     return yaml.safe_load(read_text(path=path))
+
+
+def write_yml(path, a):
+    with open(path, "wt") as f:
+        f.write(yaml.safe_dump(a))
 
 
 def check_project_toml(pkg_dir, expected_requires=[]):
@@ -402,6 +427,23 @@ def check_all_python_files_are_black(pkg_dir):
             print("E-58F1: {:s} is not 'black -l79 -tpy37'.".format(relpath))
 
 
+def make_read_readme_code():
+    return (
+        'with open("README.rst", "r", encoding="utf-8") as f:\n'
+        "    long_description = f.read()"
+    )
+
+
+def make_read_version_code():
+    return (
+        'with open(os.path.join("{name:s}", "version.py")) as f:\n'
+        "    txt = f.read()\n"
+        "    last_line = txt.splitlines()[-1]\n"
+        "    version_string = last_line.split()[-1]\n"
+        '    version = version_string.strip("\\"\'")'
+    )
+
+
 def check_setup_py(pkg_dir):
     pkg = {}
 
@@ -426,12 +468,7 @@ def check_setup_py(pkg_dir):
     if "import os" not in blocks[0]:
         print("E-07D6: ./setup.py expected 'import os' in import-block.")
 
-    read_readme_code = (
-        'with open("README.rst", "r", encoding="utf-8") as f:\n'
-        "    long_description = f.read()"
-    )
-
-    if read_readme_code not in blocks[1]:
+    if make_read_readme_code() not in blocks[1]:
         print("E-9EB9: ./setup.py expected read-README-block.")
 
     last_block = blocks[-1]
@@ -597,15 +634,10 @@ def check_setup_py(pkg_dir):
                 "does not end with name of packages[0]."
             )
 
-        read_version_code = (
-            'with open(os.path.join("{name:s}", "version.py")) as f:\n'
-            "    txt = f.read()\n"
-            "    last_line = txt.splitlines()[-1]\n"
-            "    version_string = last_line.split()[-1]\n"
-            '    version = version_string.strip("\\"\'")'
+        read_version_code = make_read_version_code().format(
+            name=pkg["basename"]
         )
-
-        if read_version_code.format(name=pkg["basename"]) not in blocks[2]:
+        if read_version_code not in blocks[2]:
             print("E-64A5: ./setup.py expected read-version-block.")
 
     else:
@@ -886,3 +918,196 @@ def check_github_workflows_release(release_yml):
                 return
 
     return
+
+
+def make_restructured_text_image_reference(key, image, target):
+    return ".. |{key:s}| image:: {image:s}\n    :target: {target:s}\n".format(
+        key=key, image=image, target=target,
+    )
+
+
+def make_default_readme_rst(name, basename, github_organization_url):
+    ss = io.StringIO()
+    ss.write(len(basename) * "#")
+    ss.write("\n")
+    ss.write(basename)
+    ss.write("\n")
+    ss.write(len(basename) * "#")
+    ss.write("\n")
+    ss.write("|TestStatus| |PyPiStatus| |BlackStyle|\n")
+    ss.write("\n")
+    ss.write("Lorem ipsum...\n")
+    ss.write("\n")
+    ss.write(
+        make_restructured_text_image_reference(
+            key="TestStatus",
+            image=os.path.join(
+                github_organization_url,
+                basename,
+                "actions/workflows/test.yml/badge.svg?branch=main",
+            ),
+            target=os.path.join(
+                github_organization_url, basename, "actions/workflows/test.yml"
+            ),
+        )
+    )
+    ss.write("\n")
+    ss.write(
+        make_restructured_text_image_reference(
+            key="PyPiStatus",
+            image="https://img.shields.io/pypi/v/{:s}".format(name),
+            target="https://pypi.org/project/{:s}".format(name),
+        )
+    )
+    ss.write("\n")
+    ss.write(
+        make_restructured_text_image_reference(
+            key="BlackStyle",
+            image="https://img.shields.io/badge/code%20style-black-000000.svg",
+            target="https://github.com/psf/black",
+        )
+    )
+    ss.write("\n")
+    ss.seek(0)
+    return ss.read()
+
+
+def make_setup_py(
+    name, basename, author, url_base, pypi_license_classifier,
+):
+    s = ""
+    s += "import setuptools\n"
+    s += "import os\n"
+    s += "\n"
+    s += "\n"
+    s += make_read_readme_code()
+    s += "\n"
+    s += "\n"
+    s += make_read_version_code().format(name=basename)
+    s += "\n"
+    s += "\n"
+    s += "setuptools.setup(\n"
+    s += "    name={:s},\n".format(name)
+    s += "    version=version,\n"
+    s += '    description=("This is {:s}."),\n'.format(basename)
+    s += "    long_description=long_description,\n"
+    s += '    long_description_content_type="text/x-rst",\n'
+    s += '    url="{:s}",\n'.format(os.path.join(url_base, basename))
+    s += '    author="{:s}",\n'.format(author)
+    s += '    author_email="{:s}@mail",\n'.format(author)
+    s += '    packages=["{:s}",],\n'.format(basename)
+    s += '    package_data={{"{:s}": []}},\n'.format(basename)
+    s += "    install_requires=[],\n"
+    s += "    classifiers=[\n"
+    s += '        "Programming Language :: Python :: 3",\n'
+    s += '        "{:s}",\n'.format(pypi_license_classifier)
+    s += '        "Operating System :: OS Independent",\n'
+    s += '        "Natural Language :: English",\n'
+    s += "    ],\n"
+    s += ")\n"
+    return s
+
+
+def init(
+    path,
+    name="my_package",
+    basename="my_package",
+    author="AUTHOR",
+    exist_ok=True,
+    github_organization_url="https://github.com/my-organization/",
+    github_workflows_test=True,
+    github_workflows_release=True,
+    license_key="MIT",
+):
+    resources_dir = pkg_resources.resource_filename("black_pack", "resources")
+    pkg_dir = os.path.join(path, name)
+
+    known_licenses = list_licences()
+    if license_key not in known_licenses:
+        print("No template for license {:s}.".format(license_key))
+        return
+
+    # main directories
+    # ================
+    os.makedirs(pkg_dir, exist_ok=exist_ok)
+    os.makedirs(os.path.join(pkg_dir, name), exist_ok=exist_ok)
+    with open(os.path.join(pkg_dir, name, "version.py"), "wt") as f:
+        f.write('__version__ = "0.0.0"\n')
+
+    with open(os.path.join(pkg_dir, name, "__init__.py"), "wt") as f:
+        f.write("from .version import __version__\n")
+
+    os.makedirs(os.path.join(pkg_dir, name, "tests"), exist_ok=exist_ok)
+    with open(
+        os.path.join(pkg_dir, name, "tests", "test_import.py"), "wt"
+    ) as f:
+        f.write(
+            "import {:s}\n".format(basename)
+            + "\n"
+            + "\n"
+            + "def test_import():\n"
+            + "    pass\n"
+        )
+
+    with open(os.path.join(pkg_dir, "setup.py"), "wt") as f:
+        f.write(
+            make_setup_py(
+                name=name,
+                basename=basename,
+                author=author,
+                url_base=github_organization_url,
+                pypi_license_classifier=known_licenses[license_key]["pypi"],
+            )
+        )
+
+    shutil.copy(
+        src=os.path.join(resources_dir, "requirements.txt"),
+        dst=os.path.join(pkg_dir, "requirements.txt"),
+    )
+
+    shutil.copy(
+        src=os.path.join(resources_dir, "project.toml"),
+        dst=os.path.join(pkg_dir, "project.toml"),
+    )
+
+    shutil.copy(
+        src=os.path.join(resources_dir, "gitignore_commit_8e67b94_2023-09-10"),
+        dst=os.path.join(pkg_dir, ".gitignore"),
+    )
+
+    with open(os.path.join(pkg_dir, "README.rst"), "wt") as f:
+        f.write(
+            make_default_readme_rst(
+                name=name,
+                basename=basename,
+                github_organization_url=github_organization_url,
+            )
+        )
+
+    with open(os.path.join(pkg_dir, "LICENSE"), "wt") as f:
+        f.write(known_licenses[license_key]["raw"])
+
+    # github workflows
+    # ================
+    if github_workflows_test or github_workflows_release:
+        os.makedirs(
+            os.path.join(pkg_dir, ".github", "workflows"), exist_ok=exist_ok
+        )
+
+    if github_workflows_test:
+        shutil.copy(
+            src=os.path.join(resources_dir, "github_workflows_test.yml"),
+            dst=os.path.join(pkg_dir, ".github", "workflows", "test.yml"),
+        )
+
+    if github_workflows_release:
+        release_yml = read_yml(
+            path=os.path.join(resources_dir, "github_workflows_release.yml")
+        )
+        release_yml["jobs"]["pypi-publish"]["environment"][
+            "url"
+        ] = "https://pypi.org/project/{:s}".format(name)
+        write_yml(
+            path=os.path.join(pkg_dir, ".github", "workflows", "release.yml"),
+            a=release_yml,
+        )
