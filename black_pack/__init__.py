@@ -676,20 +676,29 @@ def check_readme_rst(pkg_dir):
     for i in range(len(title_batches)):
         title_batches[i] = title_batches[i].strip()
 
-    if "|TestStatus|" not in title_batches[0]:
+    if len(title_batches) < 3:
         print(
-            "E-814E: ./README.rst -> batches -> |TestStatus| is not 1st batch."
+            "E-8566: "
+            "./README.rst -> batches -> Expected at least three batches."
         )
+    else:
+        if "|TestStatus|" not in title_batches[0]:
+            print(
+                "E-814E: "
+                "./README.rst -> batches -> |TestStatus| is not 1st batch."
+            )
 
-    if "|PyPiStatus|" not in title_batches[1]:
-        print(
-            "E-DFF5: ./README.rst -> batches -> |PyPiStatus| is not 2nd batch."
-        )
+        if "|PyPiStatus|" not in title_batches[1]:
+            print(
+                "E-DFF5: "
+                "./README.rst -> batches -> |PyPiStatus| is not 2nd batch."
+            )
 
-    if "|BlackStyle|" not in title_batches[2]:
-        print(
-            "E-C619: ./README.rst -> batches -> |BlackStyle| is not 3rd batch."
-        )
+        if "|BlackStyle|" not in title_batches[2]:
+            print(
+                "E-C619: "
+                "./README.rst -> batches -> |BlackStyle| is not 3rd batch."
+            )
 
     image_references = {}
     for block in blocks:
