@@ -1049,16 +1049,15 @@ def init(
             + "    pass\n"
         )
 
-    with open(os.path.join(pkg_dir, "setup.py"), "wt") as f:
-        f.write(
-            make_setup_py(
-                name=name,
-                basename=basename,
-                author=author,
-                url_base=github_organization_url,
-                pypi_license_classifier=known_licenses[license_key]["pypi"],
-            )
+    with open(os.path.join(pkg_dir, "setup.py"), "wb") as f:
+        setup_py_str = make_setup_py(
+            name=name,
+            basename=basename,
+            author=author,
+            url_base=github_organization_url,
+            pypi_license_classifier=known_licenses[license_key]["pypi"],
         )
+        f.write(setup_py_str.encode())
 
     shutil.copy(
         src=os.path.join(resources_dir, "requirements.txt"),
