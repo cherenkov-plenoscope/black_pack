@@ -5,6 +5,8 @@ black-pack
 
 |BlackPackLogo|
 
+|PackStyleBlack|
+
 Linting and structural checking for python-packages.
 Black-pack helps you to organize your python-package.
 Black-pack is very basic and not meant to support custom structures.
@@ -69,3 +71,6 @@ Writes a single specific file, e.g. the ``.gitignore``.
     :target: https://pypi.org/project/black_pack
 
 .. |BlackPackLogo| image:: https://github.com/cherenkov-plenoscope/black_pack/blob/main/readme/black_pack.svg?raw=True
+
+.. |PackStyleBlack| image:: https://img.shields.io/badge/pack%20style-black-000000.svg
+    :target: https://github.com/cherenkov-plenoscope/black_pack
