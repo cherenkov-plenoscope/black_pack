@@ -3,6 +3,7 @@ import argparse
 import os
 import shutil
 import pkg_resources
+import sys
 
 
 def main():
@@ -158,6 +159,7 @@ def main():
     else:
         print("No or unknown command.")
         parser.print_help()
+        sys.exit(17)
 
 
 if __name__ == "__main__":

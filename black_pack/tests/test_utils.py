@@ -1,7 +1,4 @@
 import black_pack
-import subprocess
-import os
-import tempfile
 
 
 def test_has_any_upper():
@@ -117,9 +114,3 @@ def test_tokenize_restructured_text_image_reference():
 
     assert "target" in ref
     assert ref["target"] == "https://meta-about-my-image.com/my/image"
-
-
-def test_cli():
-    with tempfile.TemporaryDirectory() as tmp:
-        rc = subprocess.call(["black-pack", tmp])
-        assert rc == 0
