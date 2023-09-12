@@ -36,6 +36,11 @@ def test_init_and_check_in_empty_dir():
         assert os.path.isdir(pkg_dir)
         os.chdir(pkg_dir)
 
+        with open(os.path.join(pkg_dir, "setup.py"), "rt") as f:
+            print("=========")
+            print(f.read())
+            print("=========")
+
         stdout_check = cli_stdout(["black-pack", "check"])
         assert len(stdout_check) == 0
 
