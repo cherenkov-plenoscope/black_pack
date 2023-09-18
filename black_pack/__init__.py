@@ -12,6 +12,7 @@ import dictdiffer
 import restructuredtext_lint
 import io
 import shutil
+import tempfile
 
 
 def random_hash_16bit():
@@ -384,6 +385,43 @@ def black_diff(path):
     return o
 
 
+def black_format(code):
+    """
+    I know black got a python API.
+    But I am not strong enough to init the Mode class with a correct
+    python version.
+    """
+    with tempfile.TemporaryDirectory(prefix="black_pack_") as tmp:
+        code_path = os.path.join(tmp, "code.py")
+        with open(code_path, "wt") as f:
+            f.write(code)
+
+        p = subprocess.Popen(
+            [
+                "black",
+                "--line-length",
+                "79",
+                "--target-version",
+                "py37",
+                code_path,
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        p.wait()
+        rc = p.returncode
+        o = p.stdout.read()
+
+        with open(code_path, "rt") as f:
+            out_code = f.read()
+
+    if rc == 0:
+        return out_code
+    else:
+        print("W-3EDB: Failed to apply 'black' format to code snippet.")
+        return code
+
+
 def is_pythoncode_black(path):
     diff = black_diff(path=path)
     if len(diff) > 0:
@@ -714,6 +752,8 @@ def check_setup_py(pkg_dir):
         read_version_code = make_read_version_code().format(
             name=pkg["basename"]
         )
+        read_version_code = black_format(code=read_version_code).strip("\n")
+
         if read_version_code not in blocks[2]:
             print("E-64A5: ./setup.py expected read-version-block.")
 
@@ -940,6 +980,21 @@ def check_gitignore(pkg_dir):
         pass
 
 
+def find_diff_with_path(diffs, path):
+    for d in range(len(diffs)):
+        dkey, dpath, _ = diffs[d]
+
+        if dkey == "change":
+            if len(path) == len(dpath):
+                match = True
+                for i in range(len(path)):
+                    if path[i] != dpath[i]:
+                        match = False
+                if match:
+                    return d
+    return -1
+
+
 def check_github_workflows_test(test_yml):
     res_dir = pkg_resources.resource_filename("black_pack", "resources")
 
@@ -949,11 +1004,24 @@ def check_github_workflows_test(test_yml):
 
     diff = dictdiffer.diff(first=expected_test_yml, second=test_yml)
 
-    try:
-        diff.__next__()
+    diffs = []
+    for dd in diff:
+        diffs.append(dd)
+
+    # it is ok to contain extra arguments after 'pytest .'
+    di = find_diff_with_path(diffs, ["jobs", "build", "steps", 3, "run"])
+    if di >= 0:
+        okdiff = diffs.pop(di)
+        actual_line = okdiff[2][1]
+        if "pytest ." not in actual_line:
+            print(
+                "E-5407: "
+                "./.github/workflows/test.yml "
+                "[jobs][build][steps][3][run] does not contain 'pytest .'."
+            )
+
+    if len(diffs):
         print("E-A3CF: ./.github/workflows/test.yml is not as expected.")
-    except StopIteration:
-        pass
 
 
 def check_github_workflows_release(release_yml):
