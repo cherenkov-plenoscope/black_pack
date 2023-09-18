@@ -40,7 +40,7 @@ def check_package(pkg_dir):
             )
 
         potential_packages = (
-            make_list_of_make_list_of_potential_python_packages(
+            make_list_of_potential_python_packages(
                 pkg_dir=pkg_dir, base_dir=base_dir
             )
         )
@@ -676,7 +676,7 @@ def make_list_of_potential_python_package_paths(path, l=[]):
     return l
 
 
-def make_list_of_make_list_of_potential_python_packages(pkg_dir, base_dir):
+def make_list_of_potential_python_packages(pkg_dir, base_dir):
     ppaths = make_list_of_potential_python_package_paths(path=base_dir)
     for i in range(len(ppaths)):
         ppaths[i] = os.path.relpath(path=ppaths[i], start=pkg_dir)
