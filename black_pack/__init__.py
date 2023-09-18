@@ -39,10 +39,8 @@ def check_package(pkg_dir):
                 "E-787E: directory ./{:s} is missing.".format(pkg["basename"])
             )
 
-        potential_packages = (
-            make_list_of_potential_python_packages(
-                pkg_dir=pkg_dir, base_dir=base_dir
-            )
+        potential_packages = make_list_of_potential_python_packages(
+            pkg_dir=pkg_dir, base_dir=base_dir
         )
 
         if "packages" in pkg:
@@ -197,7 +195,42 @@ def write_yml(path, a):
         f.write(yaml.safe_dump(a))
 
 
-def check_project_toml(pkg_dir, expected_requires=[]):
+def tokenize_version_string_into_hex(v):
+    vv = str.split(v, ".")
+    vi = [int(_v, base=16) for _v in vv]
+    return vi
+
+
+def compare_hex_tokens_greater_equal(a, b):
+    assert len(a) == len(b)
+
+    if a[0] == b[0]:
+        if len(a) == 1:
+            return True
+        else:
+            return compare_hex_tokens_greater_equal(a[1:], b[1:])
+    elif a[0] > b[0]:
+        return True
+    else:
+        return False
+
+
+def compare_version_string_greater_equal(a, b):
+    aa = tokenize_version_string_into_hex(a)
+    bb = tokenize_version_string_into_hex(b)
+
+    max_num_tokens = max([len(aa), len(bb)])
+    for i in range(max_num_tokens - len(aa)):
+        aa.append(int("0", base=16))
+    for i in range(max_num_tokens - len(bb)):
+        bb.append(int("0", base=16))
+
+    return compare_hex_tokens_greater_equal(aa, bb)
+
+
+def check_project_toml(
+    pkg_dir, expected_requires=[], expected_setuptools_minimal_version="42"
+):
     if not os.path.isfile(os.path.join(pkg_dir, "project.toml")):
         print("E-5E2B: ./project.toml is missing.")
         return
@@ -213,12 +246,37 @@ def check_project_toml(pkg_dir, expected_requires=[]):
         return
 
     if "requires" in project["build-system"]:
-        if "setuptools>=42" not in project["build-system"]["requires"]:
+        if len(project["build-system"]["requires"]) == 0:
             print(
-                "E-522D: "
+                "E-749E: "
                 "./project.toml[build-system][requires] "
-                "has no 'setuptools>=42'."
+                "is empty."
             )
+        else:
+            first_requirement = project["build-system"]["requires"][0]
+
+            if "setuptools>=" not in first_requirement:
+                print(
+                    "E-522D: "
+                    "./project.toml[build-system][requires][0] "
+                    "has no 'setuptools>='."
+                )
+            else:
+                actual_setuptools_minimal_version = str.strip(
+                    first_requirement, "setuptools>="
+                )
+
+                if not compare_version_string_greater_equal(
+                    actual_setuptools_minimal_version,
+                    expected_setuptools_minimal_version,
+                ):
+                    print(
+                        "E-C6F7: "
+                        "./project.toml[build-system][requires][0] "
+                        "expectec setuptools>={:s}.".format(
+                            expected_setuptools_minimal_version
+                        )
+                    )
 
         for expected_require in expected_requires:
             if expected_require not in project["build-system"]["requires"]:
@@ -530,7 +588,11 @@ def check_setup_py(pkg_dir):
                     'expected long_description_content_type="text/x-rst".'
                 )
         else:
-            print("E-E2CE: ./setup.py -> setup() has no 'long_description_content_type'.")
+            print(
+                "E-E2CE: "
+                "./setup.py -> setup() "
+                "has no 'long_description_content_type'."
+            )
 
         if "url" in setup_kwargs:
             pkg["url"] = setup_kwargs["url"].strip('"')
