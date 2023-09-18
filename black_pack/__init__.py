@@ -530,7 +530,7 @@ def check_setup_py(pkg_dir):
                     'expected long_description_content_type="text/x-rst".'
                 )
         else:
-            print("E-E2CE: ./setup.py -> setup() has no 'long_description'.")
+            print("E-E2CE: ./setup.py -> setup() has no 'long_description_content_type'.")
 
         if "url" in setup_kwargs:
             pkg["url"] = setup_kwargs["url"].strip('"')
