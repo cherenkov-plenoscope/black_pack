@@ -616,6 +616,8 @@ def check_setup_py(pkg_dir):
                 )
                 for i in range(len(pkg["packages"])):
                     pkg["packages"][i] = pkg["packages"][i].strip(" ")
+                    pkg["packages"][i] = pkg["packages"][i].strip("\n")
+                    pkg["packages"][i] = pkg["packages"][i].strip(" ")
                     pkg["packages"][i] = pkg["packages"][i].strip('"')
             except:
                 print("E-A9CC: ./setup.py -> setup() packages syntax.")
@@ -957,9 +959,10 @@ def check_github_workflows_test(test_yml):
 def check_github_workflows_release(release_yml):
     res_dir = pkg_resources.resource_filename("black_pack", "resources")
 
-    expected_release_yml = read_yml(
-        path=os.path.join(res_dir, "github_workflows_release.yml")
+    expected_release_yml_path = os.path.join(
+        res_dir, "github_workflows_release.yml"
     )
+    expected_release_yml = read_yml(path=expected_release_yml_path)
 
     diff = dictdiffer.diff(first=expected_release_yml, second=release_yml)
     diffs = [dd for dd in diff]
@@ -976,7 +979,9 @@ def check_github_workflows_release(release_yml):
         print(
             "E-671E: "
             "./.github/workflows/release.yml "
-            "is too different from {:s}.".format(expected_release_yml)
+            "is too different from the template in {:s}.".format(
+                expected_release_yml_path
+            )
         )
         return
 
