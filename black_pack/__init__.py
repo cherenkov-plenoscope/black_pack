@@ -230,7 +230,7 @@ def compare_version_string_greater_equal(a, b):
 
 
 def check_pyproject_toml(
-    pkg_dir, expected_requires=[], expected_setuptools_minimal_version="42"
+    pkg_dir, expected_requires=[], expected_setuptools_minimal_version="49.6.0"
 ):
     if not os.path.isfile(os.path.join(pkg_dir, "pyproject.toml")):
         print("E-5E2B: ./pyproject.toml is missing.")

@@ -161,10 +161,10 @@ def main():
             )
             return
 
-        if relpath == os.path.join("project.toml"):
+        if relpath == os.path.join("pyproject.toml"):
             shutil.copy(
-                src=os.path.join(resources_dir, "project.toml"),
-                dst=os.path.join(pkg_dir, "project.toml"),
+                src=os.path.join(resources_dir, "pyproject.toml"),
+                dst=os.path.join(pkg_dir, "pyproject.toml"),
             )
             return
 
