@@ -22,7 +22,7 @@ def random_hash_16bit():
 def check_package(pkg_dir):
     expected_requires = []
     check_gitignore(pkg_dir=pkg_dir)
-    check_project_toml(pkg_dir=pkg_dir, expected_requires=expected_requires)
+    check_pyproject_toml(pkg_dir=pkg_dir, expected_requires=expected_requires)
     check_requirements_txt(
         pkg_dir=pkg_dir, expected_requires=expected_requires
     )
@@ -229,28 +229,28 @@ def compare_version_string_greater_equal(a, b):
     return compare_hex_tokens_greater_equal(aa, bb)
 
 
-def check_project_toml(
+def check_pyproject_toml(
     pkg_dir, expected_requires=[], expected_setuptools_minimal_version="42"
 ):
-    if not os.path.isfile(os.path.join(pkg_dir, "project.toml")):
-        print("E-5E2B: ./project.toml is missing.")
+    if not os.path.isfile(os.path.join(pkg_dir, "pyproject.toml")):
+        print("E-5E2B: ./pyproject.toml is missing.")
         return
 
     try:
-        with open(os.path.join(pkg_dir, "project.toml"), "rt") as f:
+        with open(os.path.join(pkg_dir, "pyproject.toml"), "rt") as f:
             project = toml.loads(f.read())
     except toml.TomlDecodeError as err:
-        print("E-F42A: ./project.toml bad syntax.")
+        print("E-F42A: ./pyproject.toml bad syntax.")
 
     if "build-system" not in project:
-        print("E-3F9E: ./project.toml has no 'build-system'.")
+        print("E-3F9E: ./pyproject.toml has no 'build-system'.")
         return
 
     if "requires" in project["build-system"]:
         if len(project["build-system"]["requires"]) == 0:
             print(
                 "E-749E: "
-                "./project.toml[build-system][requires] "
+                "./pyproject.toml[build-system][requires] "
                 "is empty."
             )
         else:
@@ -259,7 +259,7 @@ def check_project_toml(
             if "setuptools>=" not in first_requirement:
                 print(
                     "E-522D: "
-                    "./project.toml[build-system][requires][0] "
+                    "./pyproject.toml[build-system][requires][0] "
                     "has no 'setuptools>='."
                 )
             else:
@@ -273,7 +273,7 @@ def check_project_toml(
                 ):
                     print(
                         "E-C6F7: "
-                        "./project.toml[build-system][requires][0] "
+                        "./pyproject.toml[build-system][requires][0] "
                         "expectec setuptools>={:s}.".format(
                             expected_setuptools_minimal_version
                         )
@@ -283,7 +283,7 @@ def check_project_toml(
             if expected_require not in project["build-system"]["requires"]:
                 print(
                     "E-EAF5: "
-                    "./project.toml[build-system][requires] "
+                    "./pyproject.toml[build-system][requires] "
                     "has no '{:s}'.".format(expected_require)
                 )
 
@@ -291,23 +291,23 @@ def check_project_toml(
             if has_any_upper(require):
                 print(
                     "E-1319: "
-                    "./project.toml[build-system][requires] "
+                    "./pyproject.toml[build-system][requires] "
                     "has upper cases in package-name '{:s}'.".format(require)
                 )
 
     else:
-        print("E-8EB6: ./project.toml[build-system] has no 'requires'.")
+        print("E-8EB6: ./pyproject.toml[build-system] has no 'requires'.")
 
     if "build-backend" in project["build-system"]:
         if "setuptools.build_meta" != project["build-system"]["build-backend"]:
             print(
                 "E-E4DA: "
-                "./project.toml[build-system][build-backend] "
+                "./pyproject.toml[build-system][build-backend] "
                 "is not 'setuptools.build_meta'."
             )
             return
     else:
-        print("E-B9A8: ./project.toml[build-system] has no 'build-backend'.")
+        print("E-B9A8: ./pyproject.toml[build-system] has no 'build-backend'.")
 
 
 def check_requirements_txt(pkg_dir, expected_requires):
@@ -1220,8 +1220,8 @@ def init(
     )
 
     shutil.copy(
-        src=os.path.join(resources_dir, "project.toml"),
-        dst=os.path.join(pkg_dir, "project.toml"),
+        src=os.path.join(resources_dir, "pyproject.toml"),
+        dst=os.path.join(pkg_dir, "pyproject.toml"),
     )
 
     shutil.copy(
