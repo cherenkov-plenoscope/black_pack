@@ -809,46 +809,6 @@ def check_readme_rst(pkg_dir):
     for i in range(len(blocks)):
         blocks[i] = blocks[i].strip()
 
-    # title
-    # -----
-    title_block = blocks[0]
-    title_lines = title_block.splitlines()
-    h0 = "#" * len(title_lines[0]) == title_lines[0]
-    h1 = len(title_lines[1]) == title_lines[0]
-    h2 = "#" * len(title_lines[2]) == title_lines[0]
-    if not h0 and h1 and h2:
-        print("E-340C: ./README.rst -> title is not '###\\nABC\\n###\\n.'")
-
-    title_batch_lines = title_block.splitlines()[3:]
-    title_batch_str = str.join(" ", title_batch_lines)
-    title_batches = title_batch_str.split(" ")
-    for i in range(len(title_batches)):
-        title_batches[i] = title_batches[i].strip()
-
-    if len(title_batches) < 3:
-        print(
-            "E-8566: "
-            "./README.rst -> batches -> Expected at least three batches."
-        )
-    else:
-        if "|TestStatus|" not in title_batches[0]:
-            print(
-                "E-814E: "
-                "./README.rst -> batches -> |TestStatus| is not 1st batch."
-            )
-
-        if "|PyPiStatus|" not in title_batches[1]:
-            print(
-                "E-DFF5: "
-                "./README.rst -> batches -> |PyPiStatus| is not 2nd batch."
-            )
-
-        if "|BlackStyle|" not in title_batches[2]:
-            print(
-                "E-C619: "
-                "./README.rst -> batches -> |BlackStyle| is not 3rd batch."
-            )
-
     image_references = {}
     for block in blocks:
         try:
