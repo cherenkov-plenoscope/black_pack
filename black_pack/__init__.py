@@ -1101,7 +1101,7 @@ def make_setup_py(
     s += "\n"
     s += "\n"
     s += "setuptools.setup(\n"
-    s += "    name={:s},\n".format(name)
+    s += '    name="{:s}",\n'.format(name)
     s += "    version=version,\n"
     s += '    description=("This is {:s}."),\n'.format(basename)
     s += "    long_description=long_description,\n"
