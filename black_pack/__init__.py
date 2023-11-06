@@ -1145,16 +1145,16 @@ def init(
     # main directories
     # ================
     os.makedirs(pkg_dir, exist_ok=exist_ok)
-    os.makedirs(os.path.join(pkg_dir, name), exist_ok=exist_ok)
-    with open(os.path.join(pkg_dir, name, "version.py"), "wt") as f:
+    os.makedirs(os.path.join(pkg_dir, basename), exist_ok=exist_ok)
+    with open(os.path.join(pkg_dir, basename, "version.py"), "wt") as f:
         f.write('__version__ = "0.0.0"\n')
 
-    with open(os.path.join(pkg_dir, name, "__init__.py"), "wt") as f:
+    with open(os.path.join(pkg_dir, basename, "__init__.py"), "wt") as f:
         f.write("from .version import __version__\n")
 
-    os.makedirs(os.path.join(pkg_dir, name, "tests"), exist_ok=exist_ok)
+    os.makedirs(os.path.join(pkg_dir, basename, "tests"), exist_ok=exist_ok)
     with open(
-        os.path.join(pkg_dir, name, "tests", "test_import.py"), "wt"
+        os.path.join(pkg_dir, basename, "tests", "test_import.py"), "wt"
     ) as f:
         f.write(
             "import {:s}\n".format(basename)
