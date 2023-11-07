@@ -832,35 +832,79 @@ def check_readme_rst(pkg_dir):
             "has no image-reference. No indent=4?"
         )
 
-    if "BlackStyle" not in image_references:
+    check_readme_image_references_blackcodestyle(
+        image_references=image_references
+    )
+    check_readme_image_references_blackpackstyle(
+        image_references=image_references
+    )
+
+    has_a_license_badge = False
+    for ref in image_references:
+        if "LicenseBadge" in ref:
+            has_a_license_badge = True
+
+    if not has_a_license_badge:
         print(
-            "E-D6CB: "
-            "./README.rst -> batches -> |BlackStyle| "
+            "E-E42B3: "
+            "./README.rst -> batches -> |???LicenseBadge| "
             "has no image-reference. No indent=4?"
         )
-    else:
-        black_image_link = (
-            "https://img.shields.io/badge/code%20style-black-000000.svg"
-        )
-        if not image_references["BlackStyle"]["image"] == black_image_link:
-            print(
-                "E-E59F: "
-                "./README.rst -> batches -> |BlackStyle| "
-                "image-link shpuld be: {:s}.".format(black_image_link)
-            )
-
-        black_target_link = "https://github.com/psf/black"
-        if not image_references["BlackStyle"]["target"] == black_target_link:
-            print(
-                "E-0EB8: "
-                "./README.rst -> batches -> |BlackStyle| "
-                "target-link shpuld be: {:s}.".format(black_target_link)
-            )
 
     out["image_references"] = image_references
     out["blocks"] = blocks
 
     return out
+
+
+def check_readme_image_references_blackcodestyle(image_references):
+    expected = badge_reference_BlackStyle()
+
+    if expected["key"] not in image_references:
+        print(
+            "E-D6CB: "
+            + "./README.rst -> batches -> |{:s}| ".format(expected["key"])
+            + "has no image-reference. No indent=4?"
+        )
+    else:
+        actual = image_references[expected["key"]]
+        if not actual["image"] == expected["image"]:
+            print(
+                "E-E59F: "
+                + "./README.rst -> batches -> |{:s}| ".format(expected["key"])
+                + "image-link should be: {:s}.".format(expected["image"])
+            )
+        if not actual["target"] == expected["target"]:
+            print(
+                "E-0EB8: "
+                + "./README.rst -> batches -> |{:s}| ".format(expected["key"])
+                + "target-link should be: {:s}.".format(expected["target"])
+            )
+
+
+def check_readme_image_references_blackpackstyle(image_references):
+    expected = badge_reference_BlackPackStyle()
+
+    if expected["key"] not in image_references:
+        print(
+            "E-42D8: "
+            + "./README.rst -> batches -> |{:s}| ".format(expected["key"])
+            + "has no image-reference. No indent=4?"
+        )
+    else:
+        actual = image_references[expected["key"]]
+        if not actual["image"] == expected["image"]:
+            print(
+                "E-1FBC: "
+                + "./README.rst -> batches -> |{:s}| ".format(expected["key"])
+                + "image-link should be: {:s}.".format(expected["image"])
+            )
+        if not actual["target"] == expected["target"]:
+            print(
+                "E-4875: "
+                + "./README.rst -> batches -> |{:s}| ".format(expected["key"])
+                + "target-link should be: {:s}.".format(expected["target"])
+            )
 
 
 def tokenize_restructured_text_image_reference(txt):
@@ -1036,7 +1080,11 @@ def make_restructured_text_image_reference(key, image, target):
     )
 
 
-def make_default_readme_rst(name, basename, github_organization_url):
+def make_default_readme_rst(
+    name, basename, github_organization_url, license_key
+):
+    license_batch = badge_reference_license(license_key=license_key)
+
     ss = io.StringIO()
     ss.write(len(basename) * "#")
     ss.write("\n")
@@ -1044,7 +1092,11 @@ def make_default_readme_rst(name, basename, github_organization_url):
     ss.write("\n")
     ss.write(len(basename) * "#")
     ss.write("\n")
-    ss.write("|TestStatus| |PyPiStatus| |BlackStyle|\n")
+    ss.write("|TestStatus| ")
+    ss.write("|PyPiStatus| ")
+    ss.write("|BlackStyle| ")
+    ss.write("|BlackPackStyle| ")
+    ss.write("|{:s}|\n".format(license_batch["key"]))
     ss.write("\n")
     ss.write("Lorem ipsum...\n")
     ss.write("\n")
@@ -1070,16 +1122,46 @@ def make_default_readme_rst(name, basename, github_organization_url):
         )
     )
     ss.write("\n")
-    ss.write(
-        make_restructured_text_image_reference(
-            key="BlackStyle",
-            image="https://img.shields.io/badge/code%20style-black-000000.svg",
-            target="https://github.com/psf/black",
-        )
-    )
+
+    blackstyle = badge_reference_BlackStyle()
+    ss.write(make_restructured_text_image_reference(**blackstyle))
     ss.write("\n")
+
+    blackpackstyle = badge_reference_BlackPackStyle()
+    ss.write(make_restructured_text_image_reference(**blackpackstyle))
+    ss.write("\n")
+
+    ss.write(make_restructured_text_image_reference(**license_batch))
+    ss.write("\n")
+
     ss.seek(0)
     return ss.read()
+
+
+def badge_reference_BlackPackStyle():
+    return {
+        "key": "BlackPackStyle",
+        "image": "https://img.shields.io/badge/pack%20style-black-000000.svg",
+        "target": "https://github.com/cherenkov-plenoscope/black_pack",
+    }
+
+
+def badge_reference_BlackStyle():
+    return {
+        "key": "BlackStyle",
+        "image": "https://img.shields.io/badge/code%20style-black-000000.svg",
+        "target": "https://github.com/psf/black",
+    }
+
+
+def badge_reference_license(license_key):
+    o = {}
+    o["MIT"] = {
+        "key": "MITLicenseBadge",
+        "image": "https://img.shields.io/badge/License-MIT-yellow.svg",
+        "target": "https://opensource.org/licenses/MIT",
+    }
+    return o[license_key]
 
 
 def make_setup_py(
@@ -1195,6 +1277,7 @@ def init(
                 name=name,
                 basename=basename,
                 github_organization_url=github_organization_url,
+                license_key=license_key,
             )
         )
 

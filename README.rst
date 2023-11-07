@@ -1,11 +1,12 @@
 ##########
 black-pack
 ##########
-|TestStatus| |PyPiStatus| |BlackStyle|
+|TestStatus| |PyPiStatus| |BlackStyle| |BlackPackStyle| |MITLicenseBadge|
+
 
 |BlackPackLogo|
 
-|PackStyleBlack|
+|BlackPackStyle|
 
 Linting and structural checking for python-packages.
 Black-pack helps you to organize your python-package.
@@ -72,5 +73,8 @@ Writes a single specific file, e.g. the ``.gitignore``.
 
 .. |BlackPackLogo| image:: https://github.com/cherenkov-plenoscope/black_pack/blob/main/readme/black_pack.svg?raw=True
 
-.. |PackStyleBlack| image:: https://img.shields.io/badge/pack%20style-black-000000.svg
+.. |BlackPackStyle| image:: https://img.shields.io/badge/pack%20style-black-000000.svg
     :target: https://github.com/cherenkov-plenoscope/black_pack
+
+.. |MITLicenseBadge| image:: https://img.shields.io/badge/License-MIT-yellow.svg
+    :target: https://opensource.org/licenses/MIT
