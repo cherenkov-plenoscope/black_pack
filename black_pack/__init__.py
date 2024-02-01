@@ -4,7 +4,7 @@ import sys
 import toml
 import yaml
 import glob
-import pkg_resources
+from importlib import resources as importlib_resources
 import subprocess
 import numpy
 import difflib
@@ -13,6 +13,10 @@ import restructuredtext_lint
 import io
 import shutil
 import tempfile
+
+
+def get_resources_dir():
+    return os.path.join(importlib_resources.files("black_pack"), "resources")
 
 
 def random_hash_16bit():
@@ -437,7 +441,7 @@ def is_restructuredtext_fine(path):
 
 
 def list_licences():
-    res_dir = pkg_resources.resource_filename("black_pack", "resources")
+    res_dir = get_resources_dir()
     licenses = {}
     licenses["GPLv3"] = {
         "pypi": (
@@ -966,7 +970,7 @@ def check_gitignore(pkg_dir):
         print("E-930D: ./.gitignore file is missing.")
         return
 
-    res_dir = pkg_resources.resource_filename("black_pack", "resources")
+    res_dir = get_resources_dir()
     exp_filename = "gitignore_commit_8e67b94_2023-09-10"
     exp_path = os.path.join(res_dir, exp_filename)
 
@@ -1000,7 +1004,7 @@ def find_diff_with_path(diffs, path):
 
 
 def check_github_workflows_test(test_yml):
-    res_dir = pkg_resources.resource_filename("black_pack", "resources")
+    res_dir = get_resources_dir()
 
     expected_test_yml = read_yml(
         path=os.path.join(res_dir, "github_workflows_test.yml")
@@ -1029,7 +1033,7 @@ def check_github_workflows_test(test_yml):
 
 
 def check_github_workflows_release(release_yml):
-    res_dir = pkg_resources.resource_filename("black_pack", "resources")
+    res_dir = get_resources_dir()
 
     expected_release_yml_path = os.path.join(
         res_dir, "github_workflows_release.yml"
@@ -1217,7 +1221,7 @@ def init(
     github_workflows_release=True,
     license_key="MIT",
 ):
-    resources_dir = pkg_resources.resource_filename("black_pack", "resources")
+    resources_dir = get_resources_dir()
 
     known_licenses = list_licences()
     if license_key not in known_licenses:

@@ -2,7 +2,7 @@ import black_pack
 import argparse
 import os
 import shutil
-import pkg_resources
+from importlib import resources as importlib_resources
 import sys
 
 
@@ -116,8 +116,8 @@ def main():
         )
 
     elif args.command == "write":
-        resources_dir = pkg_resources.resource_filename(
-            "black_pack", "resources"
+        resources_dir = os.path.join(
+            importlib_resources.files("black_pack"), "resources"
         )
         relpath = args.file
         pkg_dir = args.pkg_dir
