@@ -27,6 +27,7 @@ setuptools.setup(
         "black",
         "cython-lint",
         "toml",
+        "yamlcore",
         "restructuredtext-lint",
         "pyyaml",
         "dictdiffer",

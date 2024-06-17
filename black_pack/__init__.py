@@ -3,6 +3,7 @@ import os
 import sys
 import toml
 import yaml
+import yamlcore
 import glob
 from importlib import resources as importlib_resources
 import subprocess
@@ -192,12 +193,12 @@ def read_text(path):
 
 
 def read_yml(path):
-    return yaml.safe_load(read_text(path=path))
+    return yaml.load(stream=read_text(path=path), Loader=yamlcore.CoreLoader)
 
 
 def write_yml(path, a):
     with open(path, "wt") as f:
-        f.write(yaml.safe_dump(a))
+        f.write(yaml.safe_dump(data=a, Dumper=yamlcore.CoreDumper))
 
 
 def tokenize_version_string_into_hex(v):
