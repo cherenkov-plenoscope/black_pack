@@ -198,7 +198,7 @@ def read_yml(path):
 
 def write_yml(path, a):
     with open(path, "wt") as f:
-        f.write(yaml.safe_dump(data=a, Dumper=yamlcore.CoreDumper))
+        f.write(yaml.dump(data=a, Dumper=yamlcore.CoreDumper))
 
 
 def tokenize_version_string_into_hex(v):
